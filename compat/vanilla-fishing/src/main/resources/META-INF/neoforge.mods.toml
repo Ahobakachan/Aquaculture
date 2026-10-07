@@ -1,0 +1,40 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="AGPL-3.0-only"
+[[mods]]
+modId="aquavanilla"
+version="1.0.0"
+displayName="Aquaculture Vanilla Fishing"
+authors="Ahobakachan"
+description='''Aquaculture fish and treasures with the vanilla fishing rod, in water and lava. Disables rods, tackle boxes, hooks and bait equipment, and fillet knife recipes.'''
+[[mixins]]
+config="aquavanilla.mixins.json"
+[[dependencies.aquavanilla]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.217,)"
+side="BOTH"
+[[dependencies.aquavanilla]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1,1.21.2)"
+side="BOTH"
+[[dependencies.aquavanilla]]
+modId="aquaculture"
+type="required"
+versionRange="[2.7.21,2.8)"
+ordering="AFTER"
+side="BOTH"
+[[dependencies.aquavanilla]]
+modId="lavafishing"
+type="required"
+versionRange="[1.2.13,1.3)"
+ordering="AFTER"
+side="BOTH"
+[[dependencies.aquavanilla]]
+modId="aq2lava"
+type="incompatible"
+reason="Use LavaFishing by Sunset instead of Aquaculture 2: Lava Fishing Addon."
+versionRange="[0,)"
+side="BOTH"
+

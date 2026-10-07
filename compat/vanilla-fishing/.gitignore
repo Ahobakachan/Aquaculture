@@ -1,0 +1,6 @@
+.gradle/
+build/
+*.log
+ci/integration/run-*/
+ci/integration/build/
+ci/integration/.gradle/

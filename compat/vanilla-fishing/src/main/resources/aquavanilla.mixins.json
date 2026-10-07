@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "local.aquavanilla.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["FishingRodMixin", "AquaBobberMixin", "AquaBobberAccessor", "FishingHookMixin", "RecipeManagerMixin", "AquaRodMixin", "AquaCapabilitiesMixin", "WormFarmMixin", "LavaWarningMixin", "LavaCapabilitiesMixin"],
+  "injectors": {"defaultRequire": 1}
+}

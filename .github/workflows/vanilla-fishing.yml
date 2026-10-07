@@ -1,0 +1,62 @@
+name: Vanilla fishing — build and game checks
+on:
+  push:
+    branches: [vanilla-fishing-1.21.1]
+    paths: ['compat/vanilla-fishing/**', '.github/workflows/vanilla-fishing.yml']
+  pull_request:
+    branches: [AQ2-1.21.1]
+    paths: ['compat/vanilla-fishing/**', '.github/workflows/vanilla-fishing.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: vanilla-fishing-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build-and-test:
+    name: Build JAR and fish — ${{ matrix.mode }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [with-farmers-delight, without-farmers-delight]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Build production mod
+        run: gradle -p compat/vanilla-fishing build --console=plain
+      - name: Test packaged mod in Minecraft
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          if [ "$MODE" = "without-farmers-delight" ]; then
+            gradle -p compat/vanilla-fishing/ci/integration verifyFishing -PwithoutFD --console=plain
+          else
+            gradle -p compat/vanilla-fishing/ci/integration verifyFishing --console=plain
+          fi
+      - name: Save ready JAR and installation instructions
+        if: success() && matrix.mode == 'with-farmers-delight'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Aquaculture-Vanilla-Fishing-1.21.1-NeoForge
+          path: |
+            compat/vanilla-fishing/build/libs/*.jar
+            compat/vanilla-fishing/README.md
+            compat/vanilla-fishing/LICENSE
+          if-no-files-found: error
+      - name: Save check report and server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fishing-checks-${{ matrix.mode }}
+          path: |
+            compat/vanilla-fishing/ci/integration/build/fishing-report-*.json
+            compat/vanilla-fishing/ci/integration/run-*/logs/latest.log
+          if-no-files-found: warn
