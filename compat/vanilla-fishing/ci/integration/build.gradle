@@ -1,0 +1,48 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.111'
+}
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+repositories {
+    mavenCentral()
+    maven { url = 'https://api.modrinth.com/maven' }
+    maven { url = 'https://thedarkcolour.github.io/KotlinForForge' }
+}
+dependencies {
+    implementation files('../../build/libs/Aquaculture-Vanilla-Fishing-1.21.1-NeoForge-1.0.0.jar')
+    implementation 'maven.modrinth:aquaculture:2.7.21'
+    implementation 'maven.modrinth:lavafishing:1.21.1-1.2.13'
+    implementation 'thedarkcolour:kotlinforforge-neoforge:5.10.0'
+    if (!project.hasProperty('withoutFD')) implementation "maven.modrinth:farmers-delight:${project.findProperty('fdVersion') ?: '1.21.1-1.3.4'}"
+}
+neoForge {
+    version = '21.1.219'
+    runs {
+        server {
+            server()
+            programArgument '--nogui'
+            gameDirectory = file(project.hasProperty('withoutFD') ? 'run-without-fd' : 'run-with-fd')
+        }
+    }
+    mods { aquavanilla_checks { sourceSet sourceSets.main } }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+def reportFile = file("build/fishing-report-${project.hasProperty('withoutFD') ? 'without-fd' : 'with-fd'}.json")
+tasks.named('runServer') {
+    doFirst {
+        reportFile.delete()
+        def directory = file(project.hasProperty('withoutFD') ? 'run-without-fd' : 'run-with-fd')
+        directory.mkdirs()
+        new File(directory, 'eula.txt').text = 'eula=true\n'
+        new File(directory, 'server.properties').text = 'online-mode=false\nserver-port=0\nlevel-type=minecraft:flat\ngenerate-structures=false\nspawn-protection=0\nview-distance=2\nsimulation-distance=2\nmax-tick-time=-1\n'
+    }
+}
+tasks.register('verifyFishing') {
+    dependsOn 'runServer'
+    doLast {
+        if (!reportFile.exists()) throw new GradleException('Server did not produce an integration report')
+        def report = new groovy.json.JsonSlurper().parse(reportFile)
+        if (report.success != true) throw new GradleException("Fishing checks failed: ${report.error}")
+        println 'Fishing integration checks passed'
+    }
+}
