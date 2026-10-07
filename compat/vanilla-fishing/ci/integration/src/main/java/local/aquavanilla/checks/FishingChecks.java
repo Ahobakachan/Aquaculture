@@ -71,6 +71,7 @@ public final class FishingChecks {
                         List.of("nether_wastes", "soul_sand_valley", "crimson_forest", "warped_forest", "basalt_deltas"));
                 Set<String> allLava = Set.of("flame_squat_lobster", "obsidian_sword_fish", "steam_flying_fish", "agni_fish", "arowana_fish", "quartz_fish", "scaly_foot_snail", "yeti_crab", "lava_lamprey");
                 require(allLava.stream().allMatch(fish -> lava.contains("lavafishing:" + fish)), "Not all nine lava species are catchable: " + lava);
+                report.put("biomeLootDraws", 15600);
                 naturalCatch(server.overworld(), false, InteractionHand.MAIN_HAND);
                 naturalCatch(server.overworld(), true, InteractionHand.OFF_HAND);
                 naturalCatch(server.getLevel(Level.NETHER), true, InteractionHand.MAIN_HAND);
@@ -197,7 +198,7 @@ public final class FishingChecks {
                 @SuppressWarnings("unchecked") List<ItemStack> loot = (List<ItemStack>)getLoot.invoke(bobber, params, level);
                 require(!loot.isEmpty(), "Empty catch in " + biome);
                 for (var stack : loot) {
-                    require(!Equipment.hidden(stack), "Disabled equipment fished");
+                    requireCleanLoot(stack, 0);
                     found.add(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
                 }
             }
@@ -257,6 +258,11 @@ public final class FishingChecks {
         future.join();
         recipes(server);
         report.put("datapackReload", true);
+    }
+    private static void requireCleanLoot(ItemStack stack, int depth) {
+        require(!Equipment.hidden(stack), "Disabled equipment fished (including inside treasure containers)");
+        var contents = stack.get(DataComponents.CONTAINER);
+        if (contents != null && depth < 16) contents.stream().forEach(item -> requireCleanLoot(item, depth + 1));
     }
     private static void require(boolean pass, String message) { if (!pass) throw new AssertionError(message); }
 }
